@@ -22,41 +22,41 @@ def run(host, fpgfile, configfile,
         eth_volt=False,
         acclen=None,
         specdest=None
-        ):
+    ):
     logger = logging.getLogger(__file__)
     logger.setLevel(logging.INFO)
     handler = logging.StreamHandler(sys.stdout)
     handler.setLevel(logging.INFO)
     logger.addHandler(handler)
 
-    assert not (eth_spec and eth_volt), "Can't use both --eth_spec and --eth_volt options!"
+    assert not (args.eth_spec and args.eth_volt), "Can't use both --eth_spec and --eth_volt options!"
 
     # Load configuration file and override parameters with
     # user flags
-    with open(configfile, 'r') as fh:
+    with open(args.configfile, 'r') as fh:
         config = yaml.load(fh, Loader=yaml.SafeLoader)
 
-    config['acclen'] = acclen or config['acclen']
-    config['spectrometer_dest'] = specdest or config['spectrometer_dest']
-    config['dest_port'] = dest_port or config['dest_port']
+    config['acclen'] = args.acclen or config['acclen']
+    config['spectrometer_dest'] = args.specdest or config['spectrometer_dest']
+    config['dest_port'] = args.dest_port or config['dest_port']
 
-    if usetapcp:
+    if args.usetapcp:
         transport = casperfpga.TapcpTransport
     else:
         transport = casperfpga.KatcpTransport
 
-    logger.info("Connecting to %s" % host)
-    feng = ata_snap_fengine.AtaSnapFengine(host,
+    logger.info("Connecting to %s" % args.host)
+    feng = ata_snap_fengine.AtaSnapFengine(args.host,
             transport=transport,
-            feng_id=feng_id)
+            feng_id=args.feng_id)
 
-    if not skipprog:
-        logger.info("Programming %s with %s" % (host, fpgfile))
-        feng.program(fpgfile)
+    if not args.skipprog:
+        logger.info("Programming %s with %s" % (args.host, args.fpgfile))
+        feng.program(args.fpgfile)
     else:
         logger.info("Skipping programming because the --skipprog flag was used")
         # If we're not programming we need to load the FPG information
-        feng.fpga.get_system_information(fpgfile)
+        feng.fpga.get_system_information(args.fpgfile)
 
     # Disable ethernet output before doing anything
     feng.eth_enable_output(False)
@@ -69,8 +69,8 @@ def run(host, fpgfile, configfile,
 
     feng.eq_load_test_vectors(0, list(range(feng.n_chans_f)))
     feng.eq_load_test_vectors(1, list(range(feng.n_chans_f)))
-    feng.eq_test_vector_mode(enable=tvg)
-    feng.spec_test_vector_mode(enable=tvg)
+    feng.eq_test_vector_mode(enable=args.tvg)
+    feng.spec_test_vector_mode(enable=args.tvg)
 
     # Configure arp table
     for ip, mac in config['arp'].items():
@@ -87,7 +87,7 @@ def run(host, fpgfile, configfile,
         eth = feng.fpga.gbes['eth%i_core' %i]
         eth.configure_core(mac, ip, port)
 
-    if eth_spec:
+    if args.eth_spec:
         feng.spec_set_destination(config['spectrometer_dest'])
 
     if voltage_config is not None:
@@ -101,21 +101,24 @@ def run(host, fpgfile, configfile,
 
     feng.eth_set_dest_port(config['dest_port'])
 
-    if eth_spec:
+    if args.eth_spec:
         feng.eth_set_mode('spectra')
-        feng.fpga.write_int('corr_feng_id', feng_id)
-    elif eth_volt:
+        feng.fpga.write_int('corr_feng_id', args.feng_id)
+    elif args.eth_volt:
         feng.eth_set_mode('voltage')
 
-    if sync:
-        if not mansync:
+    if args.sync:
+        if not args.mansync:
             feng.sync_wait_for_pps()
-        feng.sync_arm(manual_trigger=mansync)
+        feng.sync_arm(manual_trigger=args.mansync)
 
     # Reset ethernet cores prior to enabling
     feng.eth_reset()
-    if eth_spec or eth_volt:
-        logger.info('Enabling Ethernet output')
+    if args.eth_spec:
+        logger.info('Enabling Ethernet output 0 for spectrometer mode')
+        feng.eth_enable_output(True, interface=0)
+    elif args.eth_volt:
+        logger.info('Enabling all Ethernet outputs for voltage mode')
         feng.eth_enable_output(True)
     else:
         logger.info('Not enabling Ethernet output, since neither voltage or spectrometer 10GbE output flags were set.')
@@ -155,6 +158,7 @@ if __name__ == '__main__':
             help ='Destination IP address to which spectra should be sent. Default: get from config file')
 
     args = parser.parse_args()
+
     run(args.host, args.fpgfile, args.configfile,
         sync=args.sync,
         mansync=args.mansync,
