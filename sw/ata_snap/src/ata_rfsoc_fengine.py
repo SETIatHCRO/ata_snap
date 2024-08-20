@@ -23,13 +23,16 @@ class AtaRfsocFengine(ata_snap_fengine.AtaSnapFengine):
     :param pipeline_id: pipeline ID of the antenna connected to this SNAP.
         This value is used to associate an F-Engine with a pipeline instance
     :type pipeline_id: int
+
+    :param logger_level: logging level for internal logs.
+    :type logger_level: int
     """
     pps_source = "board" #: After programming set the PPS source to the front panel input
     n_interfaces = 1     #: Number of available 10GbE interfaces
     n_ants_per_board = 8 #: Number of antennas on a board
     n_chans_per_block_4bit = 32 #: Number of channels reordered in a single word (with 4 bit data)
     tge_n_bytes_per_word = 64 # 64 1-byte time samples per 512-bit 100GbE output.
-    def __init__(self, host, feng_id=0, pipeline_id=0):
+    def __init__(self, host, feng_id=0, pipeline_id=0, logger_level=logging.WARNING):
         """
         Constructor method
         """
@@ -41,7 +44,7 @@ class AtaRfsocFengine(ata_snap_fengine.AtaSnapFengine):
             self.host = host
         self.fpga.is_little_endian = True # seems to have issues autodetecting?
         self.logger = logging.getLogger('AtaRfsocFengine%d' % pipeline_id)
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(logger_level)
         self.feng_id = feng_id
         self.pipeline_id = pipeline_id
         try:
