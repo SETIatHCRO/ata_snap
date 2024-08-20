@@ -438,7 +438,7 @@ class AtaSnapFengine(object):
         while (self.sync_get_ext_count() == count_now):
             time.sleep(0.05)
 
-    def sync_arm(self, manual_trigger=False):
+    def sync_arm(self, manual_trigger=False, wait_for_pps=False):
         """
         Arm the FPGA's sync generators for triggering on a 
         subsequent PPS.
@@ -456,13 +456,14 @@ class AtaSnapFengine(object):
         :return: Sync trigger time, in UNIX format
         :rval: int
         """
-        if not manual_trigger:
+        if not manual_trigger and wait_for_pps:
             self.sync_wait_for_pps()
         self.logger.info('Issuing sync arm')
         self.fpga.write_int('sync_arm', 0)
         self.fpga.write_int('sync_arm', 1)
         self.fpga.write_int('sync_arm', 0)
-        time.sleep(0.1)
+        if wait_for_pps:
+            time.sleep(0.1)
         sync_time = int(np.ceil(time.time())) + 2
         self.fpga.write_int('sync_sync_time', sync_time)
         if manual_trigger:
@@ -472,7 +473,7 @@ class AtaSnapFengine(object):
             if wait_time > 0:
                 time.sleep(wait_time)
             self.sync_manual_trigger()
-        else:
+        elif wait_for_pps:
             self.sync_wait_for_pps()
         return sync_time
 
