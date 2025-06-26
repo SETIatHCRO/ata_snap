@@ -3,7 +3,7 @@ import glob
 
 setup(
     name='ata_snap',
-    version='2.0.0',
+    version='2.0.1',
     author='J.Hickish',
     author_email='jackhickish@gmail.com',
     url='',
@@ -13,10 +13,11 @@ setup(
     install_requires=[
         'casperfpga',
         'numpy',
+        'pyaml',
     ],
     provides=['ata_snap'],
     packages=['ata_snap'],
     package_dir={'ata_snap': 'src'},
-    scripts=glob.glob('scripts/*'),
+    scripts=glob.glob('scripts/*.py'),
 )
 

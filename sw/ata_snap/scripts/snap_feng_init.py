@@ -22,7 +22,11 @@ def run(host, fpgfile, configfile,
         eth_volt=False,
         acclen=None,
         specdest=None
+<<<<<<< parameterized_multiwidth
+    ):
+=======
         ):
+>>>>>>> master
     logger = logging.getLogger(__file__)
     logger.setLevel(logging.INFO)
     handler = logging.StreamHandler(sys.stdout)
@@ -114,8 +118,16 @@ def run(host, fpgfile, configfile,
 
     # Reset ethernet cores prior to enabling
     feng.eth_reset()
+<<<<<<< parameterized_multiwidth
+    if eth_spec:
+        logger.info('Enabling Ethernet output 0 for spectrometer mode')
+        feng.eth_enable_output(True, interface=0)
+    elif eth_volt:
+        logger.info('Enabling all Ethernet outputs for voltage mode')
+=======
     if eth_spec or eth_volt:
         logger.info('Enabling Ethernet output')
+>>>>>>> master
         feng.eth_enable_output(True)
     else:
         logger.info('Not enabling Ethernet output, since neither voltage or spectrometer 10GbE output flags were set.')
@@ -168,4 +180,8 @@ if __name__ == '__main__':
         eth_volt=args.eth_volt,
         acclen=args.acclen,
         specdest=args.specdest
+<<<<<<< parameterized_multiwidth
         )
+=======
+        )
+>>>>>>> master
