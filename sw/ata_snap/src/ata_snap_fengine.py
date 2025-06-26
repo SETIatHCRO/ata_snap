@@ -1512,7 +1512,7 @@ class AtaSnapFengine(object):
         # How many slots packetizer blocks do we need to use?
         # Lazily force data rate out of each interface to be the same
         n_packets = len(dup_dests)
-        assert n_packets % n_interfaces == 0, "Number of destination packets (%d) does not divide evenly betweed %d interfaces" % n(n_packets, _interfaces)
+        assert n_packets % n_interfaces == 0, "Number of destination packets (%d) does not divide evenly betweed %d interfaces" % (n_packets, n_interfaces)
         available_blocks = packetizer_n_blocks * n_interfaces
         needed_blocks = n_chans // packetizer_chan_granularity
         spare_blocks = available_blocks - needed_blocks
